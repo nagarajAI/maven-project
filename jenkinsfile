@@ -43,8 +43,8 @@ pipeline{
             steps{
                 script{
                     withDockerRegistry(credentialsId: 'docker-cred') {
-                        def image = docker.build("rayhubli/maven_demo:${env.BUILD_NUMBER}")
-                        image.push()
+                        sh 'docker build -t rayhubli/maven_demo:${env.BUILD_NUMBER}'
+                        sh 'docker push'
                     }
                 }
             }
