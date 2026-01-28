@@ -1,0 +1,53 @@
+pipeline{
+    agent any
+    
+    tools{
+        maven 'M3'
+        jdk 'jdk17'
+    }
+    
+    environment {
+        SONAR_HOME= tool 'sonar-scan'
+    }
+    stages{
+        stage('checkout'){
+            steps{
+                cleanWs()
+                git branch:'main', url:'https://github.com/nagarajAI/maven-project.git'
+            }
+        }
+        stage('build'){
+            steps{
+                sh 'mvn clean package'
+            }
+        }
+        stage('sonarqube-scan'){
+            steps{
+                timeout(time: 2, unit: 'MINUTES') {
+                withSonarQubeEnv('sonarqube') {
+                    sh ''' 
+                    $SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=calculator -Dsonar.projectKey=calculator \
+                    -Dsonar.java.binaries=target \
+                    -Dsonar.exclusions=src/main/webapp/**/*.min.js,src/main/webapp/**/*.html
+                    '''
+                    }
+                }
+            }
+        }
+        stage('QualityGate'){
+            steps{
+                waitForQualityGate abortPipeline: true
+            }
+        }
+        stage('docker-build'){
+            steps{
+                script{
+                    withDockerRegistry(credentialsId: 'docker-cred') {
+                        def image = docker.build("rayhubli/maven_demo:${env.BUILD_NUMBER}")
+                        image.push()
+                    }
+                }
+            }
+        }
+    }
+}
