@@ -51,5 +51,13 @@ pipeline{
                 }
             }
         }
+        stage('docker run'){
+            steps{
+                sh ''' 
+                docker rm app
+                docker run -itd --name app -p 80:8080 rayhubli/maven_demo:$BUILD_NUMBER
+                '''
+            }
+        }
     }
 }
