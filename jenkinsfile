@@ -53,10 +53,13 @@ pipeline{
         }
         stage('docker run'){
             steps{
-                sh ''' 
-                docker rm app
-                docker run -itd --name app -p 80:8080 rayhubli/maven_demo:$BUILD_NUMBER
-                '''
+                try{
+                    sh 'docker rm app'
+                }catch(Exception e){
+                    echo "Exception occurred: ${e.getMessage()}" 
+                }finally{
+                    sh 'docker run -itd --name app -p 80:8080 rayhubli/maven_demo:$BUILD_NUMBER'
+                }
             }
         }
     }
